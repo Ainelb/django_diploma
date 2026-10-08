@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
+{% block guest %}
+<div class="login">
+  <form method="post" class="login-card">
+    {% csrf_token %}
+    <h1>Автоцентр <span>CRM</span></h1>
+    <p class="muted">Учёт лидов, сделок и задач отдела продаж</p>
+    {% if form.errors %}<p class="err">Неверный логин или пароль.</p>{% endif %}
+    <label>Логин<input name="username" autofocus required></label>
+    <label>Пароль<input name="password" type="password" required></label>
+    <button class="btn">Войти</button>
+    <p class="hint">Демо: <code>head</code> / <code>Demo12345!</code></p>
+  </form>
+</div>
+{% endblock %}

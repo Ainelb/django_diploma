@@ -1,0 +1,10 @@
+<li class="task{% if t.is_overdue %} is-overdue{% endif %}">
+  <form method="post" action="{% url 'task_complete' t.pk %}">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button class="check" title="Отметить выполненной" aria-label="Отметить выполненной"></button>
+  </form>
+  <div>
+    <strong>{{ t.title }}</strong>
+    <span class="muted">{{ t.due_date|date:"d.m H:i" }}{% if t.deal %} · <a href="{% url 'deal_detail' t.deal.pk %}">{{ t.deal.client.full_name }}</a>{% endif %}</span>
+  </div>
+</li>

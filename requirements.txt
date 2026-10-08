@@ -1,0 +1,6 @@
+Django==5.1.15
+djangorestframework
+djangorestframework-simplejwt
+django-filter
+drf-spectacular
+psycopg[binary]

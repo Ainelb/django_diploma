@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Сделка #{{ deal.pk }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="muted"><a href="{% url 'deal_list' %}">Сделки</a> / #{{ deal.pk }}</p>
+    <h1>{{ deal.client.full_name }}</h1>
+  </div>
+  {% include "crm/_status.html" with s=deal.status label=deal.get_status_display %}
+</header>
+
+<ol class="steps" aria-label="Этапы воронки">
+  {% for s in steps %}<li class="is-{{ s.state }}"{% if s.state == 'current' %} aria-current="step"{% endif %}>{{ s.label }}</li>{% endfor %}
+</ol>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2>Карточка</h2>
+    <dl class="facts">
+      <dt>Телефон</dt><dd>{{ deal.client.phone }}</dd>
+      <dt>Email</dt><dd>{{ deal.client.email|default:"-" }}</dd>
+      <dt>Модель</dt><dd>{{ deal.car_model }} <span class="muted">от {{ deal.car_model.base_price|intcomma }} ₸</span></dd>
+      <dt>Источник</dt><dd>{{ deal.source }}</dd>
+      <dt>Менеджер</dt><dd>{{ deal.manager.get_full_name|default:"Не назначен" }}</dd>
+      <dt>Сумма</dt><dd>{% if deal.amount %}{{ deal.amount|intcomma }} ₸{% else %}-{% endif %}</dd>
+      {% if deal.lost_reason %}<dt>Причина отказа</dt><dd>{{ deal.lost_reason }}</dd>{% endif %}
+      <dt>Создана</dt><dd>{{ deal.created_at|date:"d.m.Y H:i" }}</dd>
+    </dl>
+  </section>
+
+  <section class="panel">
+    <h2>Сменить статус</h2>
+    {% if status_form %}
+    <form method="post" action="{% url 'deal_change_status' deal.pk %}" class="stack">
+      {% csrf_token %}
+      {{ status_form.as_div }}
+      <button class="btn">Сохранить статус</button>
+    </form>
+    <p class="muted small">Сумма обязательна для «Продан», причина - для «Отказ».</p>
+    {% else %}
+    <p class="muted">Сделка закрыта, статус больше не меняется.</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2>Касания</h2>
+    <form method="post" action="{% url 'deal_add_interaction' deal.pk %}" class="stack">
+      {% csrf_token %}{{ interaction_form.as_div }}
+      <button class="btn btn-ghost">Добавить касание</button>
+    </form>
+    <ul class="feed">
+      {% for i in interactions %}
+      <li><strong>{{ i.get_kind_display }}</strong> <span class="muted">{{ i.created_at|date:"d.m H:i" }}, {{ i.author.get_full_name|default:i.author.username }}</span><p>{{ i.comment }}</p></li>
+      {% empty %}<li class="muted">Касаний пока нет.</li>{% endfor %}
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>Задачи по сделке</h2>
+    <form method="post" action="{% url 'deal_add_task' deal.pk %}" class="stack">
+      {% csrf_token %}{{ task_form.as_div }}
+      <button class="btn btn-ghost">Поставить задачу</button>
+    </form>
+    <ul class="tasks">
+      {% for t in tasks %}
+        {% if t.is_done %}<li class="task is-done"><span class="check done"></span><div><strong>{{ t.title }}</strong><span class="muted">выполнена {{ t.done_at|date:"d.m H:i" }}</span></div></li>
+        {% else %}{% include "crm/_task.html" %}{% endif %}
+      {% empty %}<li class="muted">Задач нет.</li>{% endfor %}
+    </ul>
+
+    <h2>История статусов</h2>
+    <ul class="feed">
+      {% for h in history %}
+      <li>{% if h.from_status %}{{ h.get_from_status_display }} → {% endif %}<strong>{{ h.get_to_status_display }}</strong>
+        <span class="muted">{{ h.changed_at|date:"d.m.Y H:i" }}, {{ h.changed_by.get_full_name|default:h.changed_by.username }}</span>
+        {% if h.comment %}<p>{{ h.comment }}</p>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

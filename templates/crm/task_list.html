@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Задачи{% endblock %}
+{% block content %}
+<header class="page-head"><h1>Задачи</h1></header>
+<nav class="tabs">
+  <a href="?show=open" {% if show == 'open' %}aria-current="page"{% endif %}>Открытые</a>
+  <a href="?show=done" {% if show == 'done' %}aria-current="page"{% endif %}>Выполненные</a>
+  <a href="?show=all" {% if show == 'all' %}aria-current="page"{% endif %}>Все</a>
+</nav>
+<div class="tbl-wrap">
+<table class="tbl">
+  <thead><tr><th></th><th>Задача</th><th>Сделка</th>{% if can_manage %}<th>Исполнитель</th>{% endif %}<th>Срок</th></tr></thead>
+  <tbody>
+  {% for t in tasks %}
+  <tr class="{% if t.is_overdue %}is-overdue{% endif %}">
+    <td>{% if not t.is_done %}<form method="post" action="{% url 'task_complete' t.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="check" aria-label="Выполнить"></button></form>{% else %}<span class="check done"></span>{% endif %}</td>
+    <td>{{ t.title }}</td>
+    <td>{% if t.deal %}<a href="{% url 'deal_detail' t.deal.pk %}">#{{ t.deal.pk }} {{ t.deal.client.full_name }}</a>{% else %}-{% endif %}</td>
+    {% if can_manage %}<td>{{ t.assignee.get_full_name|default:t.assignee.username }}</td>{% endif %}
+    <td>{{ t.due_date|date:"d.m.Y H:i" }}{% if t.is_overdue %} <span class="tag-overdue">просрочена</span>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="5" class="muted">Задач нет.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

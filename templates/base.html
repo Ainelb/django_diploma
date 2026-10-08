@@ -1,0 +1,41 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CRM{% endblock %} - CRM дилерского центра</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="{% url 'dashboard' %}">Автоцентр<span>CRM</span></a>
+    <nav>
+      {% with u=request.resolver_match.url_name %}
+      <a href="{% url 'dashboard' %}" {% if u == 'dashboard' %}aria-current="page"{% endif %}>Сводка</a>
+      <a href="{% url 'deal_list' %}" {% if u == 'deal_list' or u == 'deal_detail' %}aria-current="page"{% endif %}>Сделки</a>
+      <a href="{% url 'task_list' %}" {% if u == 'task_list' %}aria-current="page"{% endif %}>Задачи</a>
+      {% endwith %}
+      <a href="{% url 'swagger-ui' %}">API</a>
+      {% if user_role == 'admin' %}<a href="{% url 'admin:index' %}">Админка</a>{% endif %}
+    </nav>
+    <div class="me">
+      <strong>{{ user.get_full_name|default:user.username }}</strong>
+      <span>{{ user.profile.get_role_display }}</span>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link">Выйти</button></form>
+    </div>
+  </aside>
+  <main class="main">
+    {% if messages %}<div class="flash">{% for m in messages %}<p class="flash-{{ m.tags }}">{{ m }}</p>{% endfor %}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+  {% block guest %}{% endblock %}
+{% endif %}
+</body>
+</html>

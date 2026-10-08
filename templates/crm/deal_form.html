@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Новая сделка{% endblock %}
+{% block content %}
+<header class="page-head"><h1>Новая сделка</h1></header>
+<form method="post" class="panel stack narrow">
+  {% csrf_token %}
+  <fieldset>
+    <legend>Клиент</legend>
+    <label class="inline"><input type="radio" name="new_client" value="0" checked onchange="toggleClient(false)"> Существующий</label>
+    <label class="inline"><input type="radio" name="new_client" value="1" onchange="toggleClient(true)"> Новый клиент</label>
+    <div id="existing">{{ deal_form.client.label_tag }} {{ deal_form.client }} {{ deal_form.client.errors }}</div>
+    <div id="newclient" hidden>{{ client_form.as_div }}</div>
+  </fieldset>
+  <fieldset>
+    <legend>Сделка</legend>
+    {% for f in deal_form %}{% if f.name != 'client' %}<div>{{ f.label_tag }} {{ f }} {{ f.errors }}</div>{% endif %}{% endfor %}
+  </fieldset>
+  <button class="btn">Создать сделку</button>
+</form>
+<script>
+function toggleClient(isNew) {
+  document.getElementById('existing').hidden = isNew;
+  document.getElementById('newclient').hidden = !isNew;
+}
+{% if request.POST.new_client == '1' %}document.querySelector('[name=new_client][value="1"]').checked = true; toggleClient(true);{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Сводка{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>Сводка {% if can_manage %}по автоцентру{% else %}по моим сделкам{% endif %}</h1>
+  <a class="btn" href="{% url 'deal_create' %}">Новая сделка</a>
+</header>
+
+<section class="funnel" aria-labelledby="funnel-h">
+  <h2 id="funnel-h">Где сейчас сделки</h2>
+  {% for step in stats.funnel %}
+  <a class="funnel-row" href="{% url 'deal_list' %}?status={{ step.status }}">
+    <span class="funnel-label">{{ step.label }}</span>
+    <span class="funnel-track"><span class="funnel-bar st-bg-{{ step.status }}" style="width: {{ step.width }}%"></span></span>
+    <span class="funnel-num">{{ step.count }}</span>
+  </a>
+  {% endfor %}
+</section>
+
+<dl class="kpis">
+  <div><dt>Всего лидов</dt><dd>{{ stats.total_deals }}</dd></div>
+  <div><dt>Продано</dt><dd>{{ stats.won }}</dd></div>
+  <div><dt>Конверсия лид → продажа</dt><dd>{{ stats.conversion }}%</dd></div>
+  <div><dt>Выручка, ₸</dt><dd>{{ stats.revenue|intcomma }}</dd></div>
+  <div><dt>Средний чек, ₸</dt><dd>{{ stats.average_check|intcomma }}</dd></div>
+</dl>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2>Конверсия по источникам</h2>
+    <table class="tbl">
+      <thead><tr><th>Источник</th><th class="num">Лидов</th><th class="num">Продаж</th><th class="num">Конверсия</th></tr></thead>
+      <tbody>
+      {% for r in stats.by_source %}
+        <tr><td>{{ r.source__name }}</td><td class="num">{{ r.total }}</td><td class="num">{{ r.won }}</td><td class="num">{{ r.conversion }}%</td></tr>
+      {% empty %}<tr><td colspan="4" class="muted">Пока нет сделок.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Мои задачи</h2>
+    {% if tasks_overdue %}
+      <h3 class="overdue-h">Просрочено</h3>
+      <ul class="tasks">{% for t in tasks_overdue %}{% include "crm/_task.html" %}{% endfor %}</ul>
+    {% endif %}
+    <h3>На сегодня</h3>
+    <ul class="tasks">
+      {% for t in tasks_today %}{% include "crm/_task.html" %}
+      {% empty %}<li class="muted">На сегодня задач нет.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+
+{% if can_manage %}
+<section class="panel">
+  <h2>Менеджеры</h2>
+  <table class="tbl">
+    <thead><tr><th>Менеджер</th><th class="num">Лидов</th><th class="num">Продаж</th><th class="num">Конверсия</th><th class="num">Выручка, ₸</th></tr></thead>
+    <tbody>
+    {% for r in stats.by_manager %}
+      <tr><td>{% if r.manager__id %}{{ r.manager__first_name }} {{ r.manager__last_name }}{% else %}<span class="muted">Не назначен</span>{% endif %}</td>
+      <td class="num">{{ r.total }}</td><td class="num">{{ r.won }}</td><td class="num">{{ r.conversion }}%</td><td class="num">{{ r.revenue|intcomma }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}
